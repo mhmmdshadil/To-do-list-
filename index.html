@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>To-Do List | Muhammed Shadil MP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --primary: #0a0a0a;
+      --secondary: #141414;
+      --accent: #d4af37;
+      --accent-light: #f0d97f;
+      --text-primary: #ffffff;
+      --text-secondary: #a0a0a0;
+      --card-bg: rgba(255, 255, 255, 0.03);
+      --card-border: rgba(255, 255, 255, 0.08);
+    }
+    
+    body {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, h4 { 
+      font-weight: 600; 
+      color: var(--text-primary); 
+      letter-spacing: -0.5px; 
+    }
+    
+    p { 
+      color: var(--text-secondary); 
+      line-height: 1.6;
+    }
+
+    /* Glass Cards */
+    .glass {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: all 0.4s cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+    
+    .glass:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-5px);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(212, 175, 55, 0.1);
+    }
+
+    /* Header */
+    .fixed-header {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%;
+      background: rgba(10, 10, 10, 0.85);
+      backdrop-filter: blur(20px);
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 1000;
+      transform: translateY(-100%);
+      transition: transform 0.5s ease;
+    }
+    
+    .fixed-header.active { 
+      transform: translateY(0); 
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* CTA Buttons */
+    .cta-button {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      border-radius: 50px;
+      padding: 16px 40px;
+      font-weight: 600;
+      color: #141414;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      display: inline-block;
+      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-button:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: 0.5s;
+    }
+    
+    .cta-button:hover:before {
+      left: 100%;
+    }
+    
+    .cta-button:hover {
+      background: linear-gradient(135deg, var(--accent-light), var(--accent));
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(212, 175, 55, 0.5);
+    }
+
+    /* Socials */
+    .social-icons a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      margin: 0 8px;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .social-icons a:hover {
+      background: linear-gradient(135deg, var(--accent), var(--accent-light));
+      color: #141414;
+      transform: translateY(-3px);
+      border: none;
+      box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+    }
+
+    /* Typography scaling */
+    h1 { 
+      font-size: clamp(2.8rem, 7vw, 4.5rem); 
+      background: linear-gradient(135deg, #fff 0%, var(--accent-light) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+    }
+    
+    h2 { 
+      font-size: clamp(2rem, 6vw, 2.8rem); 
+      position: relative;
+      display: inline-block;
+      margin-bottom: 40px;
+    }
+    
+    h2:after {
+      content: '';
+      position: absolute;
+      bottom: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-light));
+      border-radius: 3px;
+    }
+    
+    p { 
+      font-size: 1.05rem; 
+    }
+
+    /* Section animations */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+    
+    .fade-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Decorative elements */
+    .accent-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: inline-block;
+      margin: 0 8px;
+    }
+    
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(10, 10, 10, 0.7);
+    }
+    
+    /* To-Do List Specific Styles */
+    .todo-container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .todo-input {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: var(--text-primary);
+      font-size: 1rem;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    
+    .todo-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
+    }
+    
+    .todo-item {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+    
+    .todo-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(5px);
+    }
+    
+    .todo-item.completed {
+      opacity: 0.7;
+    }
+    
+    .todo-item.completed .todo-text {
+      text-decoration: line-through;
+      color: var(--text-secondary);
+    }
+    
+    .todo-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      margin-right: 15px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .todo-checkbox:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    
+    .todo-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 10px;
+      height: 5px;
+      border: 2px solid #141414;
+      border-top: none;
+      border-right: none;
+      transform: rotate(-45deg);
+    }
+    
+    .todo-text {
+      flex: 1;
+      color: var(--text-primary);
+      font-size: 1rem;
+    }
+    
+    .todo-delete {
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 5px;
+      transition: all 0.3s ease;
+    }
+    
+    .todo-delete:hover {
+      color: #ff4757;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .todo-stats {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+    
+    .todo-filters {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+    
+    .filter-btn {
+      padding: 8px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .filter-btn.active, .filter-btn:hover {
+      background: var(--accent);
+      color: #141414;
+      border-color: var(--accent);
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      color: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Back to Portfolio Button */
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      margin-bottom: 30px;
+      transition: all 0.3s ease;
+    }
+    
+    .back-button:hover {
+      color: var(--accent-light);
+      transform: translateX(-5px);
+    }
+    
+    /* Subtle background pattern */
+    body:after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(rgba(212, 175, 55, 0.1) 1px, transparent 1px);
+      background-size: 20px 20px;
+      pointer-events: none;
+      z-index: -1;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="fixed-header">
+    <div class="flex items-center gap-3">
+      <div class="profile-img-container">
+        <img src="https://raw.githubusercontent.com/mhmmdshadil/muhammed-shadil/main/images/profile.jpg.jpg" width="40" height="40" alt="Profile" class="rounded-full">
+      </div>
+      <span class="font-semibold tracking-wide text-white">Muhammed Shadil MP</span>
+    </div>
+    
+    <!-- Social handles in header -->
+    <div class="header-socials">
+      <div class="social-icons flex">
+        <a href="https://github.com/mhmmdshadil" target="_blank"><i data-lucide="github" width="20" height="20"></i></a>
+        <a href="https://instagram.com/mhmmd.shadil/" target="_blank"><i data-lucide="instagram" width="20" height="20"></i></a>
+        <a href="https://x.com/mhmmd_shadil" target="_blank"><i data-lucide="twitter" width="20" height="20"></i></a>
+        <a href="https://www.linkedin.com/in/muhammed-shadil-9a980736a/" target="_blank"><i data-lucide="linkedin" width="20" height="20"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <section class="min-h-screen flex flex-col justify-center items-center px-6 py-20 fade-up relative">
+    <div class="todo-container glass p-8">
+      <a href="index.html" class="back-button">
+        <i data-lucide="arrow-left" width="20" height="20" class="mr-2"></i> Back to Portfolio
+      </a>
+      
+      <h2 class="text-center mb-6">To-Do List</h2>
+      <p class="text-center mb-8">Stay organized with this elegant task manager</p>
+      
+      <div class="todo-input-container">
+        <input type="text" class="todo-input" placeholder="Add a new task..." id="todoInput">
+      </div>
+      
+      <div class="todo-filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+      </div>
+      
+      <div class="todo-list" id="todoList">
+        <!-- To-do items will be added here dynamically -->
+        <div class="empty-state">
+          <i data-lucide="clipboard-list" width="40" height="40"></i>
+          <p>No tasks yet. Add a task to get started!</p>
+        </div>
+      </div>
+      
+      <div class="todo-stats">
+        <span id="itemsLeft">0 items left</span>
+        <button id="clearCompleted" class="text-[#a0a0a0] hover:text-[#d4af37] transition-colors">
+          Clear completed
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 text-center">
+    © 2025 Muhammed Shadil MP. All rights reserved.
+  </footer>
+
+  <script>
+    lucide.createIcons();
+    
+    // To-Do List Functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      const todoInput = document.getElementById('todoInput');
+      const todoList = document.getElementById('todoList');
+      const itemsLeft = document.getElementById('itemsLeft');
+      const clearCompleted = document.getElementById('clearCompleted');
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      
+      let todos = JSON.parse(localStorage.getItem('todos')) || [];
+      let currentFilter = 'all';
+      
+      // Initialize the app
+      function init() {
+        renderTodos();
+        updateItemsLeft();
+        
+        // Event listeners
+        todoInput.addEventListener('keypress', function(e) {
+          if (e.key === 'Enter' && this.value.trim() !== '') {
+            addTodo(this.value.trim());
+            this.value = '';
+          }
+        });
+        
+        clearCompleted.addEventListener('click', function() {
+          clearCompletedTodos();
+        });
+        
+        filterButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.getAttribute('data-filter');
+            renderTodos();
+          });
+        });
+      }
+      
+      // Add a new todo
+      function addTodo(text) {
+        const todo = {
+          id: Date.now(),
+          text,
+          completed: false
+        };
+        
+        todos.push(todo);
+        saveTodos();
+        renderTodos();
+        updateItemsLeft();
+      }
+      
+      // Toggle completed status
+      function toggleTodo(id) {
+        todos = todos.map(todo => {
+          if (todo.id === id) {
+            return {...todo, completed: !todo.completed};
+          }
+          return todo;
+        });
+        
+        saveTodos();
+        renderTodos();
+        updateItemsLeft();
+      }
+      
+      // Delete a todo
+      function deleteTodo(id) {
+        todos = todos.filter(todo => todo.id !== id);
+        saveTodos();
+        renderTodos();
+        updateItemsLeft();
+      }
+      
+      // Clear completed todos
+      function clearCompletedTodos() {
+        todos = todos.filter(todo => !todo.completed);
+        saveTodos();
+        renderTodos();
+        updateItemsLeft();
+      }
+      
+      // Save todos to localStorage
+      function saveTodos() {
+        localStorage.setItem('todos', JSON.stringify(todos));
+      }
+      
+      // Update items left counter
+      function updateItemsLeft() {
+        const count = todos.filter(todo => !todo.completed).length;
+        itemsLeft.textContent = `${count} item${count !== 1 ? 's' : ''} left`;
+      }
+      
+      // Render todos based on current filter
+      function renderTodos() {
+        let filteredTodos = todos;
+        
+        if (currentFilter === 'active') {
+          filteredTodos = todos.filter(todo => !todo.completed);
+        } else if (currentFilter === 'completed') {
+          filteredTodos = todos.filter(todo => todo.completed);
+        }
+        
+        if (filteredTodos.length === 0) {
+          todoList.innerHTML = `
+            <div class="empty-state">
+              <i data-lucide="clipboard-list" width="40" height="40"></i>
+              <p>${currentFilter === 'all' ? 'No tasks yet. Add a task to get started!' : 
+                 currentFilter === 'active' ? 'No active tasks!' : 'No completed tasks!'}</p>
+            </div>
+          `;
+          lucide.createIcons();
+          return;
+        }
+        
+        todoList.innerHTML = '';
+        
+        filteredTodos.forEach(todo => {
+          const todoElement = document.createElement('div');
+          todoElement.className = `todo-item ${todo.completed ? 'completed' : ''}`;
+          todoElement.innerHTML = `
+            <input type="checkbox" class="todo-checkbox" ${todo.completed ? 'checked' : ''}>
+            <span class="todo-text">${todo.text}</span>
+            <button class="todo-delete">
+              <i data-lucide="trash-2" width="18" height="18"></i>
+            </button>
+          `;
+          
+          const checkbox = todoElement.querySelector('.todo-checkbox');
+          const deleteBtn = todoElement.querySelector('.todo-delete');
+          
+          checkbox.addEventListener('change', () => toggleTodo(todo.id));
+          deleteBtn.addEventListener('click', () => deleteTodo(todo.id));
+          
+          todoList.appendChild(todoElement);
+        });
+        
+        lucide.createIcons();
+      }
+      
+      // Initialize the app
+      init();
+      
+      // Header scroll behavior
+      window.addEventListener('scroll', () => {
+        const fixedHeader = document.querySelector('.fixed-header');
+        if (window.scrollY > 100) {
+          fixedHeader.classList.add('active');
+        } else {
+          fixedHeader.classList.remove('active');
+        }
+        
+        // Fade-up animations
+        document.querySelectorAll('.fade-up').forEach(section => {
+          const rect = section.getBoundingClientRect();
+          if (rect.top < window.innerHeight - 100) {
+            section.classList.add('visible');
+          }
+        });
+      });
+      
+      // Initialize animations on load
+      document.querySelectorAll('.fade-up').forEach(section => {
+        const rect = section.getBoundingClientRect();
+        if (rect.top < window.innerHeight - 100) {
+          section.classList.add('visible');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
